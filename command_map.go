@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 func callbackMap(c *config, args ...string) error {
@@ -13,7 +14,7 @@ func callbackMap(c *config, args ...string) error {
 	}
 	fmt.Println("Location Areas:")
 	for _, area := range resp.Results {
-		fmt.Printf("\t%s\n", area.Name)
+		fmt.Printf(" %s- %s\n", strings.Repeat(" ", 2), area.Name)
 	}
 	c.nextLocationAreaURL = resp.Next
 	c.prevLocationAreaURL = resp.Previous
@@ -31,7 +32,7 @@ func callbackMapb(c *config, args ...string) error {
 	}
 	fmt.Println("Location Areas:")
 	for _, area := range resp.Results {
-		fmt.Printf("\t%s\n", area.Name)
+		fmt.Printf(" %s- %s\n", strings.Repeat(" ", 2), area.Name)
 	}
 	c.nextLocationAreaURL = resp.Next
 	c.prevLocationAreaURL = resp.Previous

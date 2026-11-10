@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 func callbackExplore(c *config, args ...string) error {
@@ -16,13 +17,12 @@ func callbackExplore(c *config, args ...string) error {
 		return err
 	}
 
-	fmt.Printf("Exploring %s\n", location)
+	fmt.Printf("Exploring %s:\n", location)
 
-	fmt.Printf("Found Pokemon:\n")
+	fmt.Printf(" %sFound Pokemon:\n", strings.Repeat(" ", 2))
 
 	for _, pokemon := range locationArea.PokemonEncounters {
-		fmt.Printf("- %s\n", pokemon.Pokemon.Name)
+		fmt.Printf(" %s- %s\n", strings.Repeat(" ", 4), pokemon.Pokemon.Name)
 	}
-
 	return nil
 }
