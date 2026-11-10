@@ -7,14 +7,10 @@ import (
 	"strings"
 )
 
-type config struct {
-	commands map[string]cliCommand
-}
-
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(cfg *config) error
+	callback    func(*config) error
 }
 
 func getCommands() map[string]cliCommand {
@@ -22,18 +18,29 @@ func getCommands() map[string]cliCommand {
 		"exit": {
 			name:        "exit",
 			description: "Exit the Pokedex",
-			callback:    commandExit,
+			callback:    callbackExit,
 		},
 		"help": {
 			name:        "help",
 			description: "Displays a help message",
-			callback:    commandHelp,
+			callback:    callbackHelp,
+		},
+		"map": {
+			name:        "map",
+			description: "list pokemon locations",
+			callback:    callbackMap,
+		},
+		"mapb": {
+			name:        "mapb",
+			description: "list pokemon locations (back)",
+			callback:    callbackMapb,
 		},
 	}
 }
 
 func startRepl(cfg *config) {
 	scanner := bufio.NewScanner(os.Stdin)
+	availableCommands := getCommands()
 
 	for {
 		fmt.Print("Pokedex > ")
@@ -41,14 +48,14 @@ func startRepl(cfg *config) {
 			return
 		}
 
-		words := cleanInput(scanner.Text())
-		if len(words) == 0 {
+		cleaned := cleanInput(scanner.Text())
+		if len(cleaned) == 0 {
 			continue
 		}
 
-		command, found := cfg.commands[words[0]]
-		if !found {
-			fmt.Println("Unknown command")
+		command, ok := availableCommands[cleaned[0]]
+		if !ok {
+			fmt.Println("Invalid command")
 			continue
 		}
 
