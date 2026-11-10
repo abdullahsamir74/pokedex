@@ -10,16 +10,12 @@ import (
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*config) error
+	callback    func(*config, ...string) error
 }
 
 func getCommands() map[string]cliCommand {
 	return map[string]cliCommand{
-		"exit": {
-			name:        "exit",
-			description: "Exit the Pokedex",
-			callback:    callbackExit,
-		},
+
 		"help": {
 			name:        "help",
 			description: "Displays a help message",
@@ -27,20 +23,29 @@ func getCommands() map[string]cliCommand {
 		},
 		"map": {
 			name:        "map",
-			description: "list pokemon locations",
+			description: "List the next page of location areas",
 			callback:    callbackMap,
 		},
 		"mapb": {
 			name:        "mapb",
-			description: "list pokemon locations (back)",
+			description: "List the previous page of location areas",
 			callback:    callbackMapb,
+		},
+		"explore": {
+			name:        "explore {location_area}",
+			description: "Lists the pokemon in location area",
+			callback:    callbackExplore,
+		},
+		"exit": {
+			name:        "exit",
+			description: "Exit the Pokedex",
+			callback:    callbackExit,
 		},
 	}
 }
 
 func startRepl(cfg *config) {
 	scanner := bufio.NewScanner(os.Stdin)
-	availableCommands := getCommands()
 
 	for {
 		fmt.Print("Pokedex > ")
@@ -53,13 +58,19 @@ func startRepl(cfg *config) {
 			continue
 		}
 
-		command, ok := availableCommands[cleaned[0]]
+		commandName := cleaned[0]
+		args := []string{}
+		if len(cleaned) > 1 {
+			args = cleaned[1:]
+		}
+		availableCommands := getCommands()
+
+		command, ok := availableCommands[commandName]
 		if !ok {
 			fmt.Println("Invalid command")
 			continue
 		}
-
-		if err := command.callback(cfg); err != nil {
+		if err := command.callback(cfg, args...); err != nil {
 			fmt.Println(err)
 		}
 	}
