@@ -1,21 +1,25 @@
-package main
+package repl
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 )
 
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*config, ...string) error
+	callback    func(*Config, ...string) error
 }
+
+// errExit signals that the user asked to leave the REPL.
+var errExit = errors.New("exit")
 
 func getCommands() map[string]cliCommand {
 	return map[string]cliCommand{
-
 		"help": {
 			name:        "help",
 			description: "Displays a help message",
@@ -29,7 +33,7 @@ func getCommands() map[string]cliCommand {
 		"mapb": {
 			name:        "mapb",
 			description: "List the previous page of location areas",
-			callback:    callbackMapb,
+			callback:    callbackMapBack,
 		},
 		"explore": {
 			name:        "explore {location_area}",
@@ -48,7 +52,7 @@ func getCommands() map[string]cliCommand {
 		},
 		"pokedex": {
 			name:        "pokedex",
-			description: "show name of caught pokemon",
+			description: "Show the names of caught pokemon",
 			callback:    callbackPokedex,
 		},
 		"exit": {
@@ -59,38 +63,52 @@ func getCommands() map[string]cliCommand {
 	}
 }
 
-func startRepl(cfg *config) {
+// Start runs the read-eval-print loop until the user exits or input ends.
+func Start(cfg *Config) error {
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
 		fmt.Print("Pokedex > ")
 		if !scanner.Scan() {
-			return
+			fmt.Println()
+			return scanner.Err()
 		}
 
-		cleaned := cleanInput(scanner.Text())
-		if len(cleaned) == 0 {
+		words := cleanInput(scanner.Text())
+		if len(words) == 0 {
 			continue
 		}
 
-		commandName := cleaned[0]
-		args := []string{}
-		if len(cleaned) > 1 {
-			args = cleaned[1:]
-		}
-		availableCommands := getCommands()
-
-		command, ok := availableCommands[commandName]
+		name, args := words[0], words[1:]
+		command, ok := getCommands()[name]
 		if !ok {
-			fmt.Println("Invalid command")
+			fmt.Printf("Unknown command %q. Type 'help' for a list of commands.\n", name)
 			continue
 		}
+
 		if err := command.callback(cfg, args...); err != nil {
+			if errors.Is(err, errExit) {
+				return nil
+			}
 			fmt.Println(err)
 		}
 	}
 }
 
+// cleanInput lowercases text and splits it on whitespace.
 func cleanInput(text string) []string {
 	return strings.Fields(strings.ToLower(text))
+}
+
+// sortedCommands returns the registered commands ordered by name.
+func sortedCommands() []cliCommand {
+	registered := getCommands()
+	commands := make([]cliCommand, 0, len(registered))
+	for _, command := range registered {
+		commands = append(commands, command)
+	}
+	sort.Slice(commands, func(i, j int) bool {
+		return commands[i].name < commands[j].name
+	})
+	return commands
 }

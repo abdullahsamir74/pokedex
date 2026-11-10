@@ -1,25 +1,20 @@
 package main
 
 import (
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/abdullahsamir74/pokedex/internal/pokeapi"
+	"github.com/abdullahsamir74/pokedex/internal/repl"
 )
 
-type config struct {
-	pokeapiClient       *pokeapi.Client
-	nextLocationAreaURL *string
-	prevLocationAreaURL *string
-	CaughtPokemon       map[string]pokeapi.Pokemon
-}
-
 func main() {
-	cfg := config{
-		pokeapiClient:       pokeapi.NewClient(time.Hour),
-		nextLocationAreaURL: nil,
-		prevLocationAreaURL: nil,
-		CaughtPokemon:       map[string]pokeapi.Pokemon{},
-	}
-	startRepl(&cfg)
+	client := pokeapi.NewClient(time.Hour)
+	cfg := repl.NewConfig(client)
 
+	if err := repl.Start(cfg); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }

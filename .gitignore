@@ -1,4 +1,8 @@
+# Build output
+/pokedex
+
+# IDE / editor files
 .idea/
 
-pokedex
-repl.log
+# Local logs
+*.log
